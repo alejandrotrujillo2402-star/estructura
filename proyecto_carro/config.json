@@ -1,0 +1,18 @@
+{
+  "game": {
+    "road_length": 1000,
+    "speed": 5,
+    "refresh_time": 200,
+    "jump_height": 50,
+    "car_color": [0, 0, 255]
+  },
+  "obstacles": [
+    {"x": 200, "y": 0, "type": "rock"},
+    {"x": 400, "y": 1, "type": "hole"},
+    {"x": 600, "y": 2, "type": "rock"}
+  ],
+  "obstacle_damage": {
+    "rock": 10,
+    "hole": 20
+  }
+}
