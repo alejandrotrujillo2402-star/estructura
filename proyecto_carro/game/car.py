@@ -88,7 +88,12 @@ class Car:
                     self.current_image = self.image_normal
 
         # Movimiento vertical (↑ ↓ opcional, carriles)
-        if self.move_up and self.y > 200:
+        # Ajustado para la nueva carretera (280-420 px de altura)
+        road_top = 280
+        road_bottom = 420
+        lane_height = (road_bottom - road_top) // 3
+        
+        if self.move_up and self.y > road_top:
             self.y -= 5
-        if self.move_down and self.y < 400:
+        if self.move_down and self.y < road_bottom - self.height:
             self.y += 5

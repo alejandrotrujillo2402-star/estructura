@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 from gui.draw_utils import draw_obstacle
 from avl.visualizer import draw_avl
 from game.car import Car
@@ -8,6 +9,69 @@ from avl.avl_tree import AVLTree
 from utils.config_loader import export_obstacles_to_json
 
 MOVE_EVENT = pygame.USEREVENT + 1
+
+# Cargar imagen de nube y sol
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
+cloud_img = pygame.image.load(os.path.join(ASSETS_DIR, "nube.png"))
+cloud_img = pygame.transform.scale(cloud_img, (80, 50))  # Escalar nube
+sun_img = pygame.image.load(os.path.join(ASSETS_DIR, "sol.png"))
+sun_img = pygame.transform.scale(sun_img, (60, 60))  # Escalar sol
+
+
+def draw_road(screen, screen_width, screen_height, offset_x):
+    """
+    """
+    # Colores
+    GRASS_COLOR = (147, 197, 114)   
+    ROAD_COLOR = (64, 64, 64)        # Gris oscuro para asfalto
+    YELLOW_LINE = (255, 255, 0)      # Amarillo para líneas
+    WHITE_LINE = (255, 255, 255)     # Blanco para bordes
+    
+    # Dimensiones de la carretera
+    road_top = 280
+    road_bottom = 420
+    road_height = road_bottom - road_top
+    
+    # Dibujar césped arriba y abajo de la carretera
+    pygame.draw.rect(screen, GRASS_COLOR, (0, 0, screen_width, road_top))
+    pygame.draw.rect(screen, GRASS_COLOR, (0, road_bottom, screen_width, screen_height - road_bottom))
+    
+    # Dibujar asfalto de la carretera
+    pygame.draw.rect(screen, ROAD_COLOR, (0, road_top, screen_width, road_height))
+    
+    # Dibujar líneas divisorias de carriles (líneas discontinuas amarillas)
+    lane_width = road_height // 3
+    # Primera línea divisoria
+    y1 = road_top + lane_width
+    # Segunda línea divisoria  
+    y2 = road_top + 2 * lane_width
+    
+    # Líneas discontinuas amarillas para separar carriles
+    dash_length = 30
+    gap_length = 20
+    for y_line in [y1, y2]:
+        x = -(offset_x % (dash_length + gap_length))
+        while x < screen_width:
+            if x + dash_length > 0:  # Solo dibujar si es visible
+                start_x = max(0, x)
+                end_x = min(screen_width, x + dash_length)
+                if end_x > start_x:
+                    pygame.draw.line(screen, YELLOW_LINE, (start_x, y_line), (end_x, y_line), 3)
+            x += dash_length + gap_length
+    
+    # Dibujar bordes blancos de la carretera
+    pygame.draw.line(screen, WHITE_LINE, (0, road_top), (screen_width, road_top), 4)
+    pygame.draw.line(screen, WHITE_LINE, (0, road_bottom), (screen_width, road_bottom), 4)
+    
+    # sol en la parte superior izquierda
+    screen.blit(sun_img, (50, 30))
+    
+    # nubes estáticas 
+    cloud_positions = [200, 400, 600, 800, 1000, 1200]  # Posiciones fijas de nubes
+    for cloud_x in cloud_positions:
+        if cloud_x > 0 and cloud_x < screen_width:  # Solo dibujar si está en pantalla
+            cloud_y = 50  # Altura fija en el cielo
+            screen.blit(cloud_img, (cloud_x, cloud_y))
 
 
 def generate_obstacles_random(n, road_length, lanes=(0, 1, 2), min_gap=40, start=200):
@@ -126,16 +190,14 @@ def run_game(car: Car, tree: AVLTree, config: dict):
                 elif event.key == pygame.K_DOWN:
                     car.move_down = False
 
-        # --------------------
+     
         # Actualizaciones
-        # --------------------
         car.update()
 
         # --------------------
         # Área de juego (izquierda)
         # --------------------
-        screen.fill((200, 200, 200), (0, 0, screen_width, SCREEN_H))
-        pygame.draw.line(screen, (0, 0, 0), (0, 340), (screen_width, 340), 4)
+        draw_road(screen, screen_width, SCREEN_H, offset_x)
         car.draw(screen)
 
         visible = tree.search_range(tree.root, offset_x, offset_x + screen_width)
@@ -143,7 +205,13 @@ def run_game(car: Car, tree: AVLTree, config: dict):
             if getattr(obs, "active", True):
                 draw_obstacle(screen, obs, offset_x)
 
-                obs_rect = pygame.Rect(obs.x - offset_x, 300 + obs.y * 40, 40, 40)
+                # Ajustar la detección de colisiones para la nueva carretera
+                road_top = 280
+                road_bottom = 420
+                lane_height = (road_bottom - road_top) // 3
+                y_position = road_top + obs.y * lane_height + (lane_height - 40) // 2
+                
+                obs_rect = pygame.Rect(obs.x - offset_x, y_position, 40, 40)
                 car_rect = pygame.Rect(car.x, car.y, car.width, car.height)
                 if car_rect.colliderect(obs_rect):
                     if getattr(obs, "active", True):

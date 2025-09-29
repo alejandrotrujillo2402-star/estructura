@@ -22,7 +22,11 @@ def main():
     game_config, obstacles, obstacle_types = load_config("Config.json")
 
     # 2. Crear el carro y el árbol de obstáculos
-    car = Car(50, 300)
+    # Posicionar el carro en el primer carril de la nueva carretera
+    road_top = 280
+    lane_height = (420 - 280) // 3  # 3 carriles
+    car_y = road_top + (lane_height - 30) // 2  # Centrar en el primer carril
+    car = Car(50, car_y)
     tree = cargar_obstaculos_en_avl(obstacles)
 
     # 3. Ejecutar el juego (pasamos el diccionario completo con "game")

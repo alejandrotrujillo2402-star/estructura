@@ -19,7 +19,15 @@ def draw_obstacle(screen, obstacle: Obstacle, offset_x: int):
     Dibuja un obstáculo en pantalla con imagen.
     offset_x = cuánto ha avanzado la cámara (para simular movimiento).
     """
-    rect = pygame.Rect(obstacle.x - offset_x, 300 + obstacle.y * 40, 40, 40)
+    # Nueva configuración de carretera
+    road_top = 280
+    road_bottom = 420
+    lane_height = (road_bottom - road_top) // 3
+    
+    # Calcular posición Y basada en el carril (0, 1, 2)
+    y_position = road_top + obstacle.y * lane_height + (lane_height - 40) // 2
+    
+    rect = pygame.Rect(obstacle.x - offset_x, y_position, 40, 40)
 
     if obstacle.type == "rock":
         screen.blit(rock_img, rect)
