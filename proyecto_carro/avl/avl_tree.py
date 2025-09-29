@@ -134,7 +134,34 @@ class AVLTree:
         return results
 
     # --- inorder (debug) ---
+        # --- inorder (ya lo tienes) ---
     def inorder(self, root):
         if not root:
             return []
         return self.inorder(root.left) + [(root.key, getattr(root, "data", None))] + self.inorder(root.right)
+
+    # --- preorder ---
+    def preorder(self, root):
+        if not root:
+            return []
+        return [(root.key, getattr(root, "data", None))] + self.preorder(root.left) + self.preorder(root.right)
+
+    # --- postorder ---
+    def postorder(self, root):
+        if not root:
+            return []
+        return self.postorder(root.left) + self.postorder(root.right) + [(root.key, getattr(root, "data", None))]
+
+    # --- recorrido en anchura (BFS) ---
+    def bfs(self):
+        if not self.root:
+            return []
+        q, result = [self.root], []
+        while q:
+            node = q.pop(0)
+            result.append((node.key, getattr(node, "data", None)))
+            if node.left:
+                q.append(node.left)
+            if node.right:
+                q.append(node.right)
+        return result

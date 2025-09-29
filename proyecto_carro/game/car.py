@@ -4,7 +4,7 @@ import os
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
 
 class Car:
-    def __init__(self, x, y):
+    def __init__(self, x, y, config=None):
         self.x = x
         self.y = y
         self.width = 50
@@ -21,10 +21,21 @@ class Car:
         # Estado inicial
         self.current_image = self.image_normal
         self.is_jumping = False
-        self.jump_height = 80   # altura máxima
-        self.jump_speed = 3
+
+        # Valores configurables desde JSON (con defaults)
+        if config is None:
+            config = {}
+        game_cfg = config.get("game", {})
+
+        self.jump_height = game_cfg.get("jump_height", 80)   # altura máxima
+        self.jump_speed = game_cfg.get("jump_speed", 3)      # velocidad del salto
+        self.energy = game_cfg.get("energy", 100)            # energía inicial
+        self.base_y = y                                      # posición base en el suelo
+
+        # Control de salto
         self.jump_progress = 0
-        self.energy = 100       # energía inicial
+
+        # Movimiento vertical
         self.move_up = False
         self.move_down = False
 
@@ -35,7 +46,21 @@ class Car:
         self.current_image = self.image_normal
 
     def draw(self, surface):
+        # Dibujar carro
         surface.blit(self.current_image, (self.x, self.y))
+
+        # Dibujar barra de energía arriba del carro
+        bar_width = self.width
+        bar_height = 6
+        bar_x = self.x
+        bar_y = self.y - 10
+
+        # proporción de energía (0-100)
+        energy_ratio = max(self.energy, 0) / 100
+        energy_color = (0, 200, 0) if self.energy > 30 else (200, 0, 0)
+
+        pygame.draw.rect(surface, (50, 50, 50), (bar_x, bar_y, bar_width, bar_height))   # fondo
+        pygame.draw.rect(surface, energy_color, (bar_x, bar_y, int(bar_width * energy_ratio), bar_height))
 
     def move_left(self):
         self.x -= 5
@@ -57,12 +82,12 @@ class Car:
                 self.jump_progress += self.jump_speed
             else:
                 self.y += self.jump_speed
-                if self.y >= 300:  # posición base
-                    self.y = 300
+                if self.y >= self.base_y:  # vuelve a posición base
+                    self.y = self.base_y
                     self.is_jumping = False
                     self.current_image = self.image_normal
 
-        # Movimiento vertical (↑ ↓ opcional)
+        # Movimiento vertical (↑ ↓ opcional, carriles)
         if self.move_up and self.y > 200:
             self.y -= 5
         if self.move_down and self.y < 400:

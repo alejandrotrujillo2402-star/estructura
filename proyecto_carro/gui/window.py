@@ -1,4 +1,3 @@
-# gui/window.py
 import pygame
 import random
 from gui.draw_utils import draw_obstacle
@@ -6,15 +5,12 @@ from avl.visualizer import draw_avl
 from game.car import Car
 from game.obstacle import Obstacle
 from avl.avl_tree import AVLTree
+from utils.config_loader import export_obstacles_to_json
 
 MOVE_EVENT = pygame.USEREVENT + 1
 
 
 def generate_obstacles_random(n, road_length, lanes=(0, 1, 2), min_gap=40, start=200):
-    """
-    Genera lista de obstáculos espaciados aleatoriamente.
-    Retorna una lista de diccionarios que luego se insertan en el AVL.
-    """
     xs = []
     x = start
     for _ in range(n):
@@ -33,20 +29,16 @@ def generate_obstacles_random(n, road_length, lanes=(0, 1, 2), min_gap=40, start
 
 
 def find_nearest_visible_obstacle(tree: AVLTree, offset_x: int, screen_width: int, car: Car):
-    """
-    Devuelve el objeto Obstacle visible cuya posición en pantalla esté más cerca del carro.
-    """
     visible = tree.search_range(tree.root, offset_x, offset_x + screen_width)
     if not visible:
         return None
-    # distancia en pantalla (o.x - offset_x) comparada con car.x
     nearest = min(visible, key=lambda o: abs((o.x - offset_x) - car.x))
     return nearest
 
 
 def run_game(car: Car, tree: AVLTree, config: dict):
     pygame.init()
-    SCREEN_W, SCREEN_H = 1200, 600   # ancho mayor para ver el árbol al lado
+    SCREEN_W, SCREEN_H = 1200, 600
     screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
     pygame.display.set_caption("Juego Carrito con AVL")
     clock = pygame.time.Clock()
@@ -54,13 +46,14 @@ def run_game(car: Car, tree: AVLTree, config: dict):
     refresh_ms = int(config["game"].get("refresh_time", 200))
     speed = config["game"].get("speed", 5)
     road_length = config["game"].get("road_length", 2000)
-    screen_width = 800   # área del juego (izquierda)
-    avl_width = 400      # área del AVL (derecha)
+    screen_width = 800
+    avl_width = 400
 
     pygame.time.set_timer(MOVE_EVENT, refresh_ms)
 
     offset_x = 0
     running = True
+    last_traversal_text = ""   # <- nuevo
 
     while running:
         for event in pygame.event.get():
@@ -77,9 +70,6 @@ def run_game(car: Car, tree: AVLTree, config: dict):
                 # SALTO
                 if event.key == pygame.K_SPACE and not car.is_jumping:
                     car.start_jump()
-                    # (opcional) puedes insertar dummy para ver rebalanceo si quieres:
-                    # dummy_obs = Obstacle(offset_x + random.randint(20, 50), 0, "jump", 0)
-                    # tree.root = tree.insert(tree.root, (dummy_obs.x, dummy_obs.y), dummy_obs)
 
                 # MOVER ARRIBA
                 elif event.key == pygame.K_UP:
@@ -89,15 +79,15 @@ def run_game(car: Car, tree: AVLTree, config: dict):
                 elif event.key == pygame.K_DOWN:
                     car.move_down = True
 
-                # INSERTAR DUMMY (ver rebalanceo)
+                # INSERTAR DUMMY
                 elif event.key == pygame.K_j:
                     dummy_obs = Obstacle(offset_x + random.randint(50, 200),
                                          random.choice([0, 1, 2]),
-                                         "rock", 0)
+                                         "rock", 20)
                     tree.root = tree.insert(tree.root, (dummy_obs.x, dummy_obs.y), dummy_obs)
                     print(f"[J] Insertado dummy: {dummy_obs}")
 
-                # ELIMINAR obstáculo visible más cercano
+                # ELIMINAR obstáculo
                 elif event.key == pygame.K_k:
                     target = find_nearest_visible_obstacle(tree, offset_x, screen_width, car)
                     if target:
@@ -107,15 +97,28 @@ def run_game(car: Car, tree: AVLTree, config: dict):
                     else:
                         print("[K] No hay obstáculos visibles para eliminar.")
 
-                # Mostrar AVL en una ventana matplotlib alternativa (opcional)
+                # Mostrar AVL en ventana aparte
                 elif event.key == pygame.K_t:
-                    # show in separate window if avl.visualizer has such function
-                    try:
-                        from avl.visualizer import show_avl
-                        show_avl(tree.root)
-                    except Exception:
-                        # silent fail if not available
-                        pass
+                    tree.highligth_nodes = True;
+                    print("[T] Mostrando AVL en ventana del juego...")
+
+                # Recorridos
+                elif event.key == pygame.K_r:
+                    result = tree.inorder(tree.root)
+                    last_traversal_text = f"Inorder: {result}"
+                    print(last_traversal_text)
+                elif event.key == pygame.K_p:
+                    result = tree.preorder(tree.root)
+                    last_traversal_text = f"Preorder: {result}"
+                    print(last_traversal_text)
+                elif event.key == pygame.K_o:
+                    result = tree.postorder(tree.root)
+                    last_traversal_text = f"Postorder: {result}"
+                    print(last_traversal_text)
+                elif event.key == pygame.K_f:
+                    result = tree.bfs()
+                    last_traversal_text = f"BFS: {result}"
+                    print(last_traversal_text)
 
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_UP:
@@ -157,9 +160,16 @@ def run_game(car: Car, tree: AVLTree, config: dict):
         screen.fill((240, 240, 255), (screen_width, 0, avl_width, SCREEN_H))
         draw_avl(screen, tree, screen_width, 0, avl_width, SCREEN_H)
 
+        # Mostrar recorrido seleccionado
+        if last_traversal_text:
+            font = pygame.font.SysFont(None, 20)
+            wrapped = [last_traversal_text[i:i+40] for i in range(0, len(last_traversal_text), 40)]
+            for i, line in enumerate(wrapped):
+                text = font.render(line, True, (0, 0, 0))
+                screen.blit(text, (screen_width + 10, 400 + i * 20))
+
         pygame.display.flip()
         clock.tick(60)
 
     pygame.quit()
-
-print("No hay obstáculos visibles para eliminar con K.")
+    export_obstacles_to_json(tree)

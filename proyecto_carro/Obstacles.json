@@ -1,0 +1,70 @@
+{
+  "obstacles": [
+    {
+      "x": 300,
+      "y": 0,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 600,
+      "y": 1,
+      "type": "hole",
+      "damage": 30
+    },
+    {
+      "x": 900,
+      "y": 2,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 923,
+      "y": 0,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 969,
+      "y": 1,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 1032,
+      "y": 0,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 1128,
+      "y": 1,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 1195,
+      "y": 1,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 1197,
+      "y": 1,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 1223,
+      "y": 2,
+      "type": "rock",
+      "damage": 20
+    },
+    {
+      "x": 1240,
+      "y": 1,
+      "type": "rock",
+      "damage": 20
+    }
+  ]
+}

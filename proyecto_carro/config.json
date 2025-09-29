@@ -3,11 +3,18 @@
     "refresh_time": 100,
     "speed": 10,
     "road_length": 3000,
+    "jump_height": 80,
+    "jump_speed": 3,
+    "energy": 100,
     "car_color": [0, 0, 255]
   },
   "obstacle_damage": {
     "rock": 20,
     "hole": 30
   },
-  "obstacles": []
+  "obstacles": [
+    { "x": 300, "y": 0, "type": "rock", "damage": 20 },
+    { "x": 600, "y": 1, "type": "hole", "damage": 30 },
+    { "x": 900, "y": 2, "type": "rock", "damage": 20 }
+  ]
 }
